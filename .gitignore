@@ -1,6 +1,6 @@
 # Local .terraform directories
 .terraform/
-providers/
+
 
 # Terraform state files
 *.tfstate
@@ -26,3 +26,4 @@ terraform.rc
 # Plan output
 *.plan
 *.out
+*.hcl
