@@ -8,3 +8,13 @@ resource "aws_instance" "ubuntu" {
   }
 
 }
+
+
+resource "aws_instance" "test" {
+  ami = "ami-020cba7c55df1f615"
+  instance_type = "t3.micro"
+  tags = {
+    Name = "varInstance"
+  }
+  
+}
