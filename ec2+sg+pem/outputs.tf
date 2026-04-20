@@ -41,3 +41,8 @@ output "security_group_id" {
   description = "ID of the security group attached to the instance."
   value       = aws_security_group.ec2_sg.id
 }
+
+output "nginx_url" {
+  description = "Open this in your browser to see Nginx running."
+  value       = "http://${aws_instance.ec2.public_ip}"
+}
