@@ -27,3 +27,4 @@ terraform.rc
 *.plan
 *.out
 *.hcl
+*.backup
