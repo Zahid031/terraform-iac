@@ -16,7 +16,7 @@ variable "ami-id" {
 
 
 variable "Security-Group" {
-  type = "list"
+  type = list
   default = ["sg-0a1b2c3d4e5f6g7h8i9j"]  
 }
 #map
