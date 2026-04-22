@@ -61,3 +61,20 @@ variable "environment" {
     error_message = "environment must be one of: dev, staging, production."
   }
 }
+
+
+variable "backend_bucket" {
+  type        = string
+  description = "S3 bucket name for Terraform remote state storage."
+  default = "terraform-bucket-test-purpose"
+}
+variable "backend_key" {
+  type        = string
+  description = "S3 object key for Terraform remote state storage."
+  default = "dev/terraform.tfstate"
+}
+variable "backend_region" {
+  type        = string
+  description = "AWS region for Terraform remote state storage."
+  default = "ap-southeast-1"
+}

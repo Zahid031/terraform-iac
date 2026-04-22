@@ -75,3 +75,20 @@ resource "aws_instance" "ec2" {
     Name = var.instance_name
   })
 }
+
+resource "aws_instance" "ec2-1" {
+  ami                         = var.ami_id
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.ec2_key.key_name
+  subnet_id                   = tolist(data.aws_subnets.default.ids)[0]
+  vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
+  associate_public_ip_address = true
+  user_data = templatefile("${path.module}/user_data.sh", {
+    instance_name = var.instance_name
+    environment   = var.environment
+    project       = var.project
+  })
+  tags = merge(local.common_tags, {
+    Name = var.instance_name
+  })
+}
