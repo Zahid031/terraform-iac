@@ -1,3 +1,4 @@
+#datasource to get default VPC and its subnets
 data "aws_vpc" "default" {
   default = true
 }
