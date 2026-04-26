@@ -53,5 +53,5 @@ variable "enable_nat_gateway" {
 variable "single_nat_gateway" {
   description = "Use one shared NAT Gateway instead of one per AZ (cost saving for non-prod)"
   type        = bool
-  default     = false
+  default     = true
 }
