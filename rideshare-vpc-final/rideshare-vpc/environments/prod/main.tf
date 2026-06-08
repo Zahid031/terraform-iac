@@ -20,8 +20,8 @@ module "vpc" {
   enable_dynamodb_endpoint = false
 
   # Interface endpoints — enable for EKS clusters (saves NAT costs at scale)
-  enable_ecr_endpoints       = true
-  enable_sts_endpoint        = true
+  enable_ecr_endpoints       = false
+  enable_sts_endpoint        = false
   enable_ssm_endpoints       = false
   enable_cloudwatch_endpoint = false
 
