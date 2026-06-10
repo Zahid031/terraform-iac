@@ -1,0 +1,39 @@
+# Karpenter Helm Values — environments/prod/karpenter/karpenter-helm-values.yaml
+#
+# Steps:
+#   1. terraform apply (in this folder)
+#   2. Get outputs:
+#        terraform output controller_role_arn
+#        terraform output interruption_queue_name
+#   3. Paste values below, then run:
+#        helm upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter \
+#          --version 1.3.3 \
+#          --namespace karpenter --create-namespace \
+#          -f karpenter-helm-values.yaml
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: "<paste controller_role_arn here>"
+
+settings:
+  clusterName: "rideshare-prod-eks"
+  interruptionQueue: "<paste interruption_queue_name here>"
+  featureGates:
+    spotToSpotConsolidation: true
+
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
