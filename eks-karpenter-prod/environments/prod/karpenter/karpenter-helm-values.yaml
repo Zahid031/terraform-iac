@@ -1,0 +1,71 @@
+# environments/prod/karpenter/karpenter-helm-values.yaml
+#
+# Fill in the two placeholder values from Terraform outputs, then run
+# the helm install command below.
+#
+# Get values:
+#   terraform output -raw controller_role_arn
+#   terraform output -raw interruption_queue_name
+#
+# Install:
+#   helm upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter \
+#     --version 1.3.3 \
+#     --namespace karpenter --create-namespace \
+#     -f karpenter-helm-values.yaml
+
+serviceAccount:
+  annotations:
+    # Paste controller_role_arn output here
+    eks.amazonaws.com/role-arn: "<PASTE_CONTROLLER_ROLE_ARN>"
+
+settings:
+  clusterName: "rideshare-prod-eks"
+  # Paste interruption_queue_name output here
+  interruptionQueue: "<PASTE_QUEUE_NAME>"
+  featureGates:
+    spotToSpotConsolidation: true
+
+# Schedule Karpenter controller pods onto the system node group
+# These nodes carry CriticalAddonsOnly=true:NoSchedule taint
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+
+# Pin Karpenter pods to system nodes (role=system label)
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: role
+              operator: In
+              values: ["system"]
+  # Prefer to spread controller replicas across different nodes
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: karpenter
+          topologyKey: kubernetes.io/hostname
+
+# Spread across AZs for HA
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: karpenter
+
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+# Run 2 replicas for HA (one per system node)
+replicas: 2

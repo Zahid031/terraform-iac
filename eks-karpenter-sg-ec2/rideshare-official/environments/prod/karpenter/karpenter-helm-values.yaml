@@ -1,0 +1,30 @@
+# karpenter-helm-values.yaml
+# Apply with: helm upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter \
+#   --version 1.x.x --namespace karpenter --create-namespace \
+#   -f karpenter-helm-values.yaml
+#
+# Substitute {{ }} placeholders from `terraform output` after apply.
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: "{{ terraform output -raw controller_role_arn }}"
+
+settings:
+  clusterName: "{{ terraform output -raw cluster_name }}"         # from eks layer
+  clusterEndpoint: "{{ terraform output -raw cluster_endpoint }}" # from eks layer
+  interruptionQueue: "{{ terraform output -raw interruption_queue_name }}"
+
+controller:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+replicas: 2
+
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
