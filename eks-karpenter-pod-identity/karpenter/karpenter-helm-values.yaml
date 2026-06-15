@@ -1,0 +1,67 @@
+# environments/prod/karpenter/karpenter-helm-values.yaml
+#
+# Pod Identity removes the need for serviceAccount.annotations entirely.
+# The EKS Pod Identity Agent handles credential injection automatically
+# via the association created by the Terraform karpenter module.
+#
+# Only two runtime values to fill in — both from `terraform output`:
+#   clusterName:        terraform output -raw cluster_name          (eks layer)
+#   interruptionQueue:  terraform output -raw interruption_queue_name (karpenter layer)
+#
+# Install:
+#   helm upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter \
+#     --version 1.3.3 \
+#     --namespace karpenter --create-namespace \
+#     -f karpenter-helm-values.yaml
+
+settings:
+  clusterName: "rideshare-prod-eks"
+  # Paste interruption_queue_name output here
+  interruptionQueue: "Karpenter-rideshare-prod-eks"
+  featureGates:
+    spotToSpotConsolidation: true
+
+# ── No serviceAccount.annotations block ──────────────────────────────────────
+# With Pod Identity, no eks.amazonaws.com/role-arn annotation is needed.
+# The Pod Identity Agent injects credentials via the association binding
+# the karpenter controller SA to the IAM role — no annotation, no OIDC.
+
+# Schedule Karpenter controller pods onto the system node group
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: role
+              operator: In
+              values: ["system"]
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: karpenter
+          topologyKey: kubernetes.io/hostname
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: karpenter
+
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+replicas: 2
