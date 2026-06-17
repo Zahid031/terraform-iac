@@ -1,31 +1,21 @@
-# environments/prod/karpenter/node-class.yaml
-#
-# Apply after Helm install:
-#   kubectl apply -f node-class.yaml
-#
-# spec.role must be the Karpenter node IAM role NAME (not ARN).
-# Get it:  terraform -chdir=environments/prod/karpenter output -raw node_iam_role_name
-
 apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
 metadata:
   name: default
 spec:
-  # Karpenter node IAM role — NOT the system node group role, NOT an ARN
-  # Get: terraform -chdir=environments/prod/karpenter output -raw node_iam_role_name
-  role: "rideshare-prod-eks-karpenter-node"
+  role: rideshare-prod-eks-karpenter-node
 
+  # REQUIRED in v1.13
   amiFamily: AL2023
 
-  # Karpenter discovers subnets via karpenter.sh/discovery tag.
-  # Your private-app subnets must carry this tag (set via VPC layer or manually).
+  # REQUIRED (THIS WAS MISSING IN YOUR FILE)
+  amiSelectorTerms:
+    - alias: al2023@latest
+
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "rideshare-prod-eks"
 
-  # Karpenter discovers SGs via karpenter.sh/discovery tag.
-  # The EKS module tags the cluster SG + node SG with this tag automatically
-  # when the tag is set at the cluster level (as it is in eks/main.tf).
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: "rideshare-prod-eks"
@@ -33,16 +23,16 @@ spec:
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:
-        volumeSize: 50Gi
+        volumeSize: 20Gi
         volumeType: gp3
         encrypted: true
         deleteOnTermination: true
 
   metadataOptions:
-    httpTokens: required       # enforce IMDSv2
-    httpPutResponseHopLimit: 1 # block pod → IMDS access
+    httpTokens: required
+    httpPutResponseHopLimit: 1
 
   tags:
-    Project:     "rideshare"
+    Project: "rideshare"
     Environment: "prod"
-    ManagedBy:   "karpenter"
+    ManagedBy: "karpenter"

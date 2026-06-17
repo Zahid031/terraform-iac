@@ -9,14 +9,14 @@ variable "region" {
 
 variable "cluster_name" {
   type        = string
-  description = "EKS cluster name — copy from eks layer: terraform output cluster_name"
+  description = "EKS cluster name  copy from eks layer: terraform output cluster_name"
 }
 
 # ── Karpenter Helm ───────────────────────────────────────────────────────────
 
 variable "karpenter_version" {
   type        = string
-  default     = "1.3.3"
+  default     = "1.9.0"
   description = "Karpenter Helm chart version (must match controller image tag)"
 }
 
